@@ -16,47 +16,27 @@ logger = logging.getLogger(__name__)
 
 
 async def main() -> None:
-    # -------------------------
-    # Logging
-    # -------------------------
     setup_logging()
-    logger.info("Starting Telegram Event Tracker...")
 
-    # -------------------------
-    # Telegram bot + dispatcher
-    # -------------------------
-    tg_client = TelegramClient()
+    bot = TelegramClient()
     dp = Dispatcher()
-
     dp.include_router(router)
 
-    # -------------------------
-    # Event source
-    # -------------------------
     source = TrelloSource()
 
-    # -------------------------
-    # Watcher service
-    # -------------------------
+    board_url = f"https://trello.com/b/{settings.TRELLO_BOARD_ID}"
+
     watcher = EventWatcher(
         source=source,
-        bot=tg_client,
+        bot=bot,
         interval=settings.POLL_INTERVAL,
+        board_url=board_url,
     )
 
-    # Run watcher in background (non-blocking)
     asyncio.create_task(watcher.run(set_last_seen))
 
-    logger.info("Watcher started, polling Telegram updates...")
-
-    # -------------------------
-    # Start bot polling
-    # -------------------------
-    await dp.start_polling(tg_client.bot)
+    await dp.start_polling(bot.bot)
 
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        logger.info("Bot stopped manually.")
+    asyncio.run(main())

@@ -1,10 +1,8 @@
 import requests
 import logging
-from datetime import datetime
-from typing import List
+from typing import List, Dict
 
 from app.config import settings
-from app.core.models import Event
 from app.core.source import EventSource
 
 logger = logging.getLogger(__name__)
@@ -16,7 +14,7 @@ class TrelloSource(EventSource):
     def name(self) -> str:
         return "Trello"
 
-    def fetch_events(self, limit: int = 10) -> List[Event]:
+    def fetch_raw_actions(self, limit: int = 10) -> List[Dict]:
         url = f"{self.BASE_URL}/boards/{settings.TRELLO_BOARD_ID}/actions"
 
         params = {
@@ -26,27 +24,9 @@ class TrelloSource(EventSource):
             "filter": "all",
         }
 
-        logger.info("Fetching Trello events")
+        logger.info("Fetching Trello actions...")
 
         res = requests.get(url, params=params, timeout=10)
         res.raise_for_status()
 
-        events = []
-
-        for item in res.json():
-            data = item.get("data", {})
-
-            events.append(
-                Event(
-                    id=item["id"],
-                    source=self.name(),
-                    title=item.get("type", "unknown"),
-                    description=data.get("card", {}).get("name"),
-                    actor=item.get("memberCreator", {}).get("fullName"),
-                    created_at=datetime.fromisoformat(
-                        item["date"].replace("Z", "+00:00")
-                    ),
-                )
-            )
-
-        return events
+        return res.json()

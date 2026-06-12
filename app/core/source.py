@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import List
-from app.core.models import Event
+from typing import List, Dict
 
 
 class EventSource(ABC):
     @abstractmethod
-    def fetch_events(self, limit: int = 10) -> List[Event]:
+    def fetch_raw_actions(self, limit: int = 10) -> List[Dict]:
         raise NotImplementedError
 
     @abstractmethod
