@@ -7,7 +7,6 @@ from app.core.models import Event
 from app.bot.client import TelegramClient
 from app.bot.formatter import EventFormatter
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -18,12 +17,12 @@ class EventWatcher:
         self.interval = interval
         self.last_seen_id: Optional[str] = None
 
-    async def run(self) -> None:
+    async def run(self, set_last_seen_callback=None) -> None:
         logger.info("Watcher started for %s", self.source.name())
 
         while True:
             try:
-                events: List[Event] = self.source.fetch_events()
+                events = self.source.fetch_events()
 
                 new_events = []
 
@@ -38,9 +37,14 @@ class EventWatcher:
                 if events:
                     self.last_seen_id = events[0].id
 
+                    if set_last_seen_callback:
+                        set_last_seen_callback(self.last_seen_id)
+
                 for event in reversed(new_events):
-                    msg = EventFormatter.format(event)
-                    await self.bot.send(msg)
+                    msg = self.bot.send.__self__.__class__  # (no-op safety, ignore)
+                    message = EventFormatter.format(event)
+
+                    await self.bot.send(message)
                     logger.info("Sent event %s", event.id)
 
             except Exception as e:

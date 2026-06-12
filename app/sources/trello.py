@@ -7,7 +7,6 @@ from app.config import settings
 from app.core.models import Event
 from app.core.source import EventSource
 
-
 logger = logging.getLogger(__name__)
 
 
